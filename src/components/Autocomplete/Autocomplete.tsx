@@ -28,9 +28,14 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   const [highlightRegexp, setHighlightRegexp] = useState<RegExp>();
   const [quering, setQuering] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
+  const [selected, setSelected] = useState<string | null>();
 
   const autocompleteRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onSelect = (value: string) => {
+    setSelected(value);
+    setOpen(false);
+  };
 
   const queryItems = useCallback(() => {
     setQuering(true);
@@ -44,8 +49,8 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
   // open dropdown and fire query request
   const openDropdown = useCallback(() => {
+    setOpen(true);
     if (!open) {
-      setOpen(true);
       queryItems();
     }
   }, [open]);
@@ -74,7 +79,7 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
       if (
         e.target &&
         autocompleteRef.current &&
-        e.target !== inputRef.current &&
+        e.target !== autocompleteRef.current &&
         // if click target is inside autocomplete root node we shouldn't close it
         !autocompleteRef.current.contains(e.target as Node)
       ) {
@@ -101,13 +106,16 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
       )}
       onClick={openDropdown}
     >
-      <input
-        ref={inputRef}
-        className={classes.Input}
-        value={query}
-        type="text"
-        onChange={({ target: { value } }) => setQuery(value)}
-      />
+      {!open && selected ? (
+        <div className={classes.Selected}>{selected}</div>
+      ) : (
+        <input
+          className={classes.Input}
+          value={query}
+          type="text"
+          onChange={({ target: { value } }) => setQuery(value)}
+        />
+      )}
 
       <div className={classes.Icon}>
         {quering ? (
@@ -119,14 +127,20 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
       {open && (
         <div className={classes.Dropdown}>
-          {items.map((item) => (
-            <AutocompleteItem
-              key={item.id}
-              item={item}
-              query={highlightQuery}
-              highlight={highlightRegexp}
-            />
-          ))}
+          {items && items.length > 0 ? (
+            items.map((item) => (
+              <AutocompleteItem
+                key={item.id}
+                item={item}
+                selected={item.value === selected}
+                onSelect={onSelect}
+                query={highlightQuery}
+                highlight={highlightRegexp}
+              />
+            ))
+          ) : (
+            <div className={classes.Placeholder}>nothing found...</div>
+          )}
         </div>
       )}
     </div>
@@ -135,15 +149,20 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
 interface AutocompleteItemProps {
   item: Item;
+  onSelect: (value: string) => void;
+  selected?: boolean;
   query?: string;
   highlight?: RegExp;
 }
 
 const AutocompleteItem: FC<AutocompleteItemProps> = memo(
-  ({ item, query, highlight }) => {
+  ({ item, onSelect, selected, query, highlight }) => {
     const parts = highlight ? item.value.split(highlight) : [item.value];
+    const onClick = useCallback(() => {
+      onSelect(item.value);
+    }, [item.value, onSelect]);
     return (
-      <div key={item.id} className={classes.Item}>
+      <div className={classes.Item} onClick={onClick}>
         {parts.map((part, i) => (
           <span
             className={classnames(
@@ -153,6 +172,11 @@ const AutocompleteItem: FC<AutocompleteItemProps> = memo(
             {part}
           </span>
         ))}
+        {selected && (
+          <div className={classes.Icon}>
+            <img src="/assets/check.svg" />
+          </div>
+        )}
       </div>
     );
   }
