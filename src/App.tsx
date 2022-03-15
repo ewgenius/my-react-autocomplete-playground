@@ -8,6 +8,14 @@ export function App() {
       <Autocomplete
         dataFetcher={(q) => new Promise((r) => r([{ id: 1, value: "test" }]))}
       />
+
+      <Autocomplete
+        dataFetcher={(q) => new Promise((r) => r([{ id: 1, value: "test" }]))}
+      />
+
+      <Autocomplete
+        dataFetcher={(q) => new Promise((r) => r([{ id: 1, value: "test" }]))}
+      />
     </div>
   );
 }

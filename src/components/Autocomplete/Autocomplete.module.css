@@ -4,12 +4,21 @@
   font-size: 14px;
 }
 
+.AutocompleteOpened .Input {
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
 .Input {
-  border-radius: 8px;
   padding: 8px 12px;
   height: 20px;
   border: 1px solid #aaa;
   font-size: 14px;
+  border-radius: 4px;
+}
+
+.Input:focus {
+  outline: none;
 }
 
 .Dropdown {
@@ -18,12 +27,15 @@
   flex-flow: column;
   max-height: 120px;
   overflow-y: auto;
-  top: 40px;
+  top: 37px;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 8px;
-  padding: 8px 0;
   border: 1px solid #aaa;
+  z-index: 10;
+  background-color: #fff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
 .Item {

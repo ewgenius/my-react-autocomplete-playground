@@ -1,4 +1,5 @@
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
+import { classnames } from "../../utils/classnames";
 import classes from "./Autocomplete.module.css";
 
 export interface Item {
@@ -52,7 +53,10 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   return (
     <div
       ref={autocompleteRef}
-      className={classes.Autocomplete}
+      className={classnames(
+        classes.Autocomplete,
+        open && classes.AutocompleteOpened
+      )}
       onClick={openDropdown}
     >
       <input
