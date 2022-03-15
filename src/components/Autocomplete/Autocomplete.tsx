@@ -1,4 +1,5 @@
-import { FC, ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { useDebouncedEffect } from "../../hooks/useDebouncedEffect";
 import { classnames } from "../../utils/classnames";
 import classes from "./Autocomplete.module.css";
 
@@ -15,21 +16,28 @@ export interface AutocompleteProps {
 export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [quering, setQuering] = useState(false);
+  const [items, setItems] = useState<Item[]>([]);
 
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const openDropdown = () => setOpen(true);
 
-  useEffect(() => {
-    dataFetcher(query).then((results) => {
-      console.log(query, results);
-    });
-  }, [query]);
+  useDebouncedEffect(
+    () => {
+      setQuering(true);
+      dataFetcher(query).then((results) => {
+        setItems(results);
+        setQuering(false);
+      });
+    },
+    300,
+    [query]
+  );
 
   useEffect(() => {
     function clickHandler(e: MouseEvent) {
-      console.log(e.target, inputRef.current);
       if (
         e.target &&
         autocompleteRef.current &&
@@ -69,15 +77,11 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
       {open && (
         <div className={classes.Dropdown}>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
-          <div className={classes.Item}>item</div>
+          {items.map((item) => (
+            <div key={item.id} className={classes.Item}>
+              {item.value}
+            </div>
+          ))}
         </div>
       )}
     </div>
