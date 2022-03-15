@@ -46,3 +46,7 @@
 .Item:hover {
   background-color: #aaa;
 }
+
+.Highlight {
+  background-color: yellow;
+}

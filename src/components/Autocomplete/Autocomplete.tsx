@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { FC, memo, ReactNode, useEffect, useRef, useState } from "react";
 import { useDebouncedEffect } from "../../hooks/useDebouncedEffect";
 import { classnames } from "../../utils/classnames";
 import classes from "./Autocomplete.module.css";
@@ -16,6 +16,8 @@ export interface AutocompleteProps {
 export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [highlightQuery, setHighlightQuery] = useState<string>();
+  const [highlightRegexp, setHighlightRegexp] = useState<RegExp>();
   const [quering, setQuering] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
 
@@ -28,6 +30,8 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
     () => {
       setQuering(true);
       dataFetcher(query).then((results) => {
+        setHighlightQuery(query);
+        setHighlightRegexp(new RegExp(`(${query})`, "gi"));
         setItems(results);
         setQuering(false);
       });
@@ -78,12 +82,40 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
       {open && (
         <div className={classes.Dropdown}>
           {items.map((item) => (
-            <div key={item.id} className={classes.Item}>
-              {item.value}
-            </div>
+            <AutocompleteItem
+              key={item.id}
+              item={item}
+              query={highlightQuery}
+              highlight={highlightRegexp}
+            />
           ))}
         </div>
       )}
     </div>
   );
 }
+
+interface AutocompleteItemProps {
+  item: Item;
+  query?: string;
+  highlight?: RegExp;
+}
+
+const AutocompleteItem: FC<AutocompleteItemProps> = memo(
+  ({ item, query, highlight }) => {
+    const parts = highlight ? item.value.split(highlight) : [item.value];
+    return (
+      <div key={item.id} className={classes.Item}>
+        {parts.map((part, i) => (
+          <span
+            className={classnames(
+              part.toLowerCase() === query?.toLowerCase() && classes.Highlight
+            )}
+          >
+            {part}
+          </span>
+        ))}
+      </div>
+    );
+  }
+);
