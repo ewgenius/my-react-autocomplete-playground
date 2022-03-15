@@ -1,4 +1,12 @@
-import { FC, memo, ReactNode, useEffect, useRef, useState } from "react";
+import {
+  FC,
+  memo,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDebouncedEffect } from "../../hooks/useDebouncedEffect";
 import { classnames } from "../../utils/classnames";
 import classes from "./Autocomplete.module.css";
@@ -15,7 +23,7 @@ export interface AutocompleteProps {
 
 export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState<string>();
   const [highlightQuery, setHighlightQuery] = useState<string>();
   const [highlightRegexp, setHighlightRegexp] = useState<RegExp>();
   const [quering, setQuering] = useState(false);
@@ -24,17 +32,37 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const openDropdown = () => setOpen(true);
+  const queryItems = useCallback(() => {
+    setQuering(true);
+    dataFetcher(query || "").then((results) => {
+      setHighlightQuery(query);
+      setHighlightRegexp(new RegExp(`(${query})`, "gi"));
+      setItems(results);
+      setQuering(false);
+    });
+  }, [query]);
 
+  // open dropdown and fire query request
+  const openDropdown = useCallback(() => {
+    if (!open) {
+      setOpen(true);
+      queryItems();
+    }
+  }, [open]);
+
+  // debounced refetch while typing
   useDebouncedEffect(
+    // mark as quering right after typing started
     () => {
-      setQuering(true);
-      dataFetcher(query).then((results) => {
-        setHighlightQuery(query);
-        setHighlightRegexp(new RegExp(`(${query})`, "gi"));
-        setItems(results);
-        setQuering(false);
-      });
+      if (query !== undefined) {
+        setQuering(true);
+      }
+    },
+    // fire query request if query is a string, with 300ms debounce timeout
+    () => {
+      if (query !== undefined) {
+        queryItems();
+      }
     },
     300,
     [query]
@@ -42,10 +70,12 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
   useEffect(() => {
     function clickHandler(e: MouseEvent) {
+      // handle clicks
       if (
         e.target &&
         autocompleteRef.current &&
         e.target !== inputRef.current &&
+        // if click target is inside autocomplete root node we shouldn't close it
         !autocompleteRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
@@ -78,6 +108,14 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
         type="text"
         onChange={({ target: { value } }) => setQuery(value)}
       />
+
+      <div className={classes.Icon}>
+        {quering ? (
+          <img className={classes.IconLoading} src="/assets/loader.svg" />
+        ) : (
+          <img src={`/assets/chevron-${open ? "up" : "down"}.svg`} />
+        )}
+      </div>
 
       {open && (
         <div className={classes.Dropdown}>

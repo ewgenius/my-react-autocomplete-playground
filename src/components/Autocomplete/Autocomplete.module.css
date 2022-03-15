@@ -1,7 +1,31 @@
 .Autocomplete {
   display: flex;
+  align-items: center;
   position: relative;
   font-size: 14px;
+}
+
+.Icon {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+.IconLoading {
+  animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+  100% { 
+    transform:rotate(360deg); 
+  } 
+}
+
+.Icon img {
+  width: 18px;
+  height: 18px;
 }
 
 .AutocompleteOpened .Input {
