@@ -1,3 +1,36 @@
 .Autocomplete {
   display: flex;
+  position: relative;
+  font-size: 14px;
+}
+
+.Input {
+  border-radius: 8px;
+  padding: 8px 12px;
+  height: 20px;
+  border: 1px solid #aaa;
+  font-size: 14px;
+}
+
+.Dropdown {
+  position: absolute;
+  display: flex;
+  flex-flow: column;
+  max-height: 120px;
+  overflow-y: auto;
+  top: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  padding: 8px 0;
+  border: 1px solid #aaa;
+}
+
+.Item {
+  padding: 8px 8px;
+  cursor: pointer;
+}
+
+.Item:hover {
+  background-color: #aaa;
 }
