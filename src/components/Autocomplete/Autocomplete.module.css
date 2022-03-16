@@ -3,6 +3,7 @@
   align-items: center;
   position: relative;
   font-size: 14px;
+  cursor: pointer;
 }
 
 .Icon {
@@ -79,6 +80,9 @@
 }
 
 .Item {
+  display: flex;
+  align-items: center;
+  position: relative;
   padding: 8px 8px;
   cursor: pointer;
 }
@@ -88,5 +92,6 @@
 }
 
 .Highlight {
-  background-color: yellow;
+  background-color: rgb(255, 177, 59);
+  font-weight: bold;
 }

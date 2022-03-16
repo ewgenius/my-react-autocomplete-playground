@@ -1,4 +1,5 @@
 import {
+  ChangeEventHandler,
   FC,
   memo,
   ReactNode,
@@ -17,7 +18,6 @@ import iconCevronUp from "../../../assets/chevron-up.svg";
 import iconCevronDown from "../../../assets/chevron-down.svg";
 
 export interface Item {
-  id: number;
   value: string;
 }
 
@@ -34,8 +34,13 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   const [quering, setQuering] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<string | null>();
+  const [error, setError] = useState<string | null>();
 
   const autocompleteRef = useRef<HTMLDivElement>(null);
+
+  const onChange: ChangeEventHandler<HTMLInputElement> = ({
+    target: { value },
+  }) => setQuery(value);
 
   const onSelect = (value: string) => {
     setSelected(value);
@@ -43,19 +48,34 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
   };
 
   const queryItems = useCallback(() => {
+    setError(null);
     setQuering(true);
-    dataFetcher(query || "").then((results) => {
-      setHighlightQuery(query);
-      setHighlightRegexp(new RegExp(`(${query})`, "gi"));
-      setItems(results);
-      setQuering(false);
-    });
+    dataFetcher(query || "")
+      .then((results) => {
+        setHighlightQuery(query);
+        setHighlightRegexp(new RegExp(`(${query})`, "gi"));
+        setItems(results);
+        setQuering(false);
+      })
+      .catch(() => {
+        setError("Something went wrong");
+        setQuering(false);
+      });
   }, [query]);
 
   // open dropdown and fire query request
   const openDropdown = useCallback(() => {
     setOpen(true);
     if (!open) {
+      queryItems();
+    }
+  }, [open]);
+
+  const toggleDropdown = useCallback(() => {
+    if (open) {
+      setOpen(false);
+    } else {
+      setOpen(true);
       queryItems();
     }
   }, [open]);
@@ -80,27 +100,32 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
   useEffect(() => {
     function clickHandler(e: MouseEvent) {
-      // handle clicks
-      if (
-        e.target &&
-        autocompleteRef.current &&
-        e.target !== autocompleteRef.current &&
-        // if click target is inside autocomplete root node we shouldn't close it
-        !autocompleteRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
+      if (e.target && autocompleteRef.current) {
+        if (e.target === autocompleteRef.current) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
 
-      e.preventDefault();
-      e.stopPropagation();
+        // click outside
+        if (
+          e.target !== autocompleteRef.current &&
+          !autocompleteRef.current.contains(e.target as Node)
+        ) {
+          setOpen(false);
+        }
+      }
     }
 
-    document.addEventListener("click", clickHandler);
+    if (open) {
+      document.addEventListener("click", clickHandler);
+    } else {
+      document.removeEventListener("click", clickHandler);
+    }
 
     return () => {
       document.removeEventListener("click", clickHandler);
     };
-  }, []);
+  }, [open]);
 
   return (
     <div
@@ -109,20 +134,23 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
         classes.Autocomplete,
         open && classes.AutocompleteOpened
       )}
-      onClick={openDropdown}
     >
       {!open && selected ? (
-        <div className={classes.Selected}>{selected}</div>
+        <div onClick={openDropdown} className={classes.Selected}>
+          {selected}
+        </div>
       ) : (
         <input
+          onClick={openDropdown}
           className={classes.Input}
           value={query}
+          placeholder={selected || ""}
           type="text"
-          onChange={({ target: { value } }) => setQuery(value)}
+          onChange={onChange}
         />
       )}
 
-      <div className={classes.Icon}>
+      <div className={classes.Icon} onClick={toggleDropdown}>
         {quering ? (
           <img className={classes.IconLoading} src={iconLoader} />
         ) : (
@@ -133,9 +161,9 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
       {open && (
         <div className={classes.Dropdown}>
           {items && items.length > 0 ? (
-            items.map((item) => (
+            items.map((item, i) => (
               <AutocompleteItem
-                key={item.id}
+                key={`${item.value}_${i}`}
                 item={item}
                 selected={item.value === selected}
                 onSelect={onSelect}
@@ -144,7 +172,9 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
               />
             ))
           ) : (
-            <div className={classes.Placeholder}>nothing found...</div>
+            <div className={classes.Placeholder}>
+              {quering ? "loading..." : "nothing found..."}
+            </div>
           )}
         </div>
       )}
@@ -170,6 +200,7 @@ const AutocompleteItem: FC<AutocompleteItemProps> = memo(
       <div className={classes.Item} onClick={onClick}>
         {parts.map((part, i) => (
           <span
+            key={i}
             className={classnames(
               part.toLowerCase() === query?.toLowerCase() && classes.Highlight
             )}
