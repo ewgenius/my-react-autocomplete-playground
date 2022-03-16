@@ -34,16 +34,6 @@
   border-bottom-right-radius: 0px;
 }
 
-.Selected {
-  min-width: 220px;
-  padding: 8px 12px;
-  height: 20px;
-  border: 1px solid #aaa;
-  font-size: 14px;
-  border-radius: 4px; 
-  line-height: 20px;
-}
-
 .Input {
   min-width: 220px;
   padding: 8px 12px;
@@ -77,6 +67,11 @@
 .Placeholder {
   padding: 8px 8px;
   color: #aaa;
+}
+
+.Error {
+  padding: 8px 8px;
+  color: rgb(197, 0, 0);
 }
 
 .Item {

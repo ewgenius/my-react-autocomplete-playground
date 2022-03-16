@@ -26,9 +26,8 @@ export interface AutocompleteProps {
   itemRender?: (item: Item) => ReactNode;
 }
 
-export function Autocomplete({ dataFetcher }: AutocompleteProps) {
+export const Autocomplete: FC<AutocompleteProps> = ({ dataFetcher }) => {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState<string>();
   const [highlightQuery, setHighlightQuery] = useState<string>();
   const [highlightRegexp, setHighlightRegexp] = useState<RegExp>();
   const [quering, setQuering] = useState(false);
@@ -38,16 +37,12 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
   const autocompleteRef = useRef<HTMLDivElement>(null);
 
-  const onChange: ChangeEventHandler<HTMLInputElement> = ({
-    target: { value },
-  }) => setQuery(value);
-
   const onSelect = (value: string) => {
     setSelected(value);
     setOpen(false);
   };
 
-  const queryItems = useCallback(() => {
+  const queryItems = (query: string) => {
     setError(null);
     setQuering(true);
     dataFetcher(query || "")
@@ -61,13 +56,17 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
         setError("Something went wrong");
         setQuering(false);
       });
-  }, [query]);
+  };
+
+  const onQueryStart = () => setQuering(true);
+  const onQueryFinish = (q: string) => queryItems(q);
 
   // open dropdown and fire query request
   const openDropdown = useCallback(() => {
+    console.log("open");
     setOpen(true);
     if (!open) {
-      queryItems();
+      queryItems("");
     }
   }, [open]);
 
@@ -76,27 +75,9 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
       setOpen(false);
     } else {
       setOpen(true);
-      queryItems();
+      queryItems("");
     }
   }, [open]);
-
-  // debounced refetch while typing
-  useDebouncedEffect(
-    // mark as quering right after typing started
-    () => {
-      if (query !== undefined) {
-        setQuering(true);
-      }
-    },
-    // fire query request if query is a string, with 300ms debounce timeout
-    () => {
-      if (query !== undefined) {
-        queryItems();
-      }
-    },
-    300,
-    [query]
-  );
 
   useEffect(() => {
     function clickHandler(e: MouseEvent) {
@@ -135,20 +116,13 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
         open && classes.AutocompleteOpened
       )}
     >
-      {!open && selected ? (
-        <div onClick={openDropdown} className={classes.Selected}>
-          {selected}
-        </div>
-      ) : (
-        <input
-          onClick={openDropdown}
-          className={classes.Input}
-          value={query}
-          placeholder={selected || ""}
-          type="text"
-          onChange={onChange}
-        />
-      )}
+      <AutocompleteInput
+        selected={selected}
+        editable={open}
+        onClick={openDropdown}
+        onQueryStart={onQueryStart}
+        onQueryFinish={onQueryFinish}
+      />
 
       <div className={classes.Icon} onClick={toggleDropdown}>
         {quering ? (
@@ -160,7 +134,9 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
       {open && (
         <div className={classes.Dropdown}>
-          {items && items.length > 0 ? (
+          {error ? (
+            <div className={classes.Error}>{error}</div>
+          ) : items && items.length > 0 ? (
             items.map((item, i) => (
               <AutocompleteItem
                 key={`${item.value}_${i}`}
@@ -180,7 +156,56 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
       )}
     </div>
   );
+};
+
+interface AutocompleteInputProps {
+  selected?: string | null;
+  editable?: boolean;
+  onClick: React.MouseEventHandler<HTMLInputElement>;
+  onQueryStart: () => void;
+  onQueryFinish: (query: string) => void;
 }
+
+const AutocompleteInput: FC<AutocompleteInputProps> = ({
+  onClick,
+  selected,
+  editable,
+  onQueryStart,
+  onQueryFinish,
+}) => {
+  const [query, setQuery] = useState<string>();
+  const onChange: ChangeEventHandler<HTMLInputElement> = ({
+    target: { value },
+  }) => setQuery(value);
+
+  useDebouncedEffect(
+    // mark as quering right after typing started
+    () => {
+      if (query !== undefined) {
+        onQueryStart();
+      }
+    },
+    // fire query request if query is a string, with 300ms debounce timeout
+    () => {
+      if (query !== undefined) {
+        onQueryFinish(query);
+      }
+    },
+    300,
+    [query]
+  );
+
+  return (
+    <input
+      onClick={onClick}
+      className={classes.Input}
+      value={editable ? query || "" : selected || ""}
+      placeholder={selected || ""}
+      type="text"
+      onChange={onChange}
+    />
+  );
+};
 
 interface AutocompleteItemProps {
   item: Item;
@@ -192,6 +217,7 @@ interface AutocompleteItemProps {
 
 const AutocompleteItem: FC<AutocompleteItemProps> = memo(
   ({ item, onSelect, selected, query, highlight }) => {
+    // TODO: this part might be too slow
     const parts = highlight ? item.value.split(highlight) : [item.value];
     const onClick = useCallback(() => {
       onSelect(item.value);
