@@ -11,6 +11,11 @@ import { useDebouncedEffect } from "../../hooks/useDebouncedEffect";
 import { classnames } from "../../utils/classnames";
 import classes from "./Autocomplete.module.css";
 
+import iconLoader from "../../../assets/loader.svg";
+import iconCheck from "../../../assets/check.svg";
+import iconCevronUp from "../../../assets/chevron-up.svg";
+import iconCevronDown from "../../../assets/chevron-down.svg";
+
 export interface Item {
   id: number;
   value: string;
@@ -119,9 +124,9 @@ export function Autocomplete({ dataFetcher }: AutocompleteProps) {
 
       <div className={classes.Icon}>
         {quering ? (
-          <img className={classes.IconLoading} src="/assets/loader.svg" />
+          <img className={classes.IconLoading} src={iconLoader} />
         ) : (
-          <img src={`/assets/chevron-${open ? "up" : "down"}.svg`} />
+          <img src={open ? iconCevronUp : iconCevronDown} />
         )}
       </div>
 
@@ -174,7 +179,7 @@ const AutocompleteItem: FC<AutocompleteItemProps> = memo(
         ))}
         {selected && (
           <div className={classes.Icon}>
-            <img src="/assets/check.svg" />
+            <img src={iconCheck} />
           </div>
         )}
       </div>
