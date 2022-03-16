@@ -39,12 +39,14 @@ export const Autocomplete: FC<AutocompleteProps> = ({ name, dataFetcher }) => {
 
   const onSelect = (value: string) => {
     setSelected(value);
+    setQuering(false);
     setOpen(false);
   };
 
   const queryItems = (query: string) => {
     setError(null);
     setQuering(true);
+    setItems([]);
     dataFetcher(query || "")
       .then((results) => {
         setHighlightQuery(query);
@@ -92,6 +94,7 @@ export const Autocomplete: FC<AutocompleteProps> = ({ name, dataFetcher }) => {
           !autocompleteRef.current.contains(e.target as Node)
         ) {
           setOpen(false);
+          setQuering(false);
         }
       }
     }
@@ -179,10 +182,10 @@ const AutocompleteInput: FC<AutocompleteInputProps> = ({
   }) => setQuery(value);
 
   useEffect(() => {
-    if (selected) {
+    if (selected || !editable) {
       setQuery(undefined);
     }
-  }, [selected]);
+  }, [selected, editable]);
 
   useDebouncedEffect(
     // mark as quering right after typing started
