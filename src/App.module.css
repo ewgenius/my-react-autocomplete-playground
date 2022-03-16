@@ -1,11 +1,10 @@
 .App {
   display: flex;
-  gap: 32px;
   flex-flow: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 16px;
+  padding: 0 16px;
 }
 
 .Row {
@@ -13,6 +12,7 @@
   flex-flow: column;
   gap: 16px;
   min-width: 320px;
+  padding: 16px 0;
 }
 
 .Button {

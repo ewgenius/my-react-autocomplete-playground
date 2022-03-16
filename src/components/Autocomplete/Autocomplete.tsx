@@ -63,7 +63,6 @@ export const Autocomplete: FC<AutocompleteProps> = ({ name, dataFetcher }) => {
 
   // open dropdown and fire query request
   const openDropdown = useCallback(() => {
-    console.log("open");
     setOpen(true);
     if (!open) {
       queryItems("");

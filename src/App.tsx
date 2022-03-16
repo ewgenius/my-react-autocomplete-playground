@@ -42,7 +42,7 @@ export function App() {
         className={classes.Row}
         onSubmit={(e) => {
           e.preventDefault();
-          console.log((e.target as any).elements);
+          alert((e.target as any).elements[0].value);
         }}
       >
         <b>Real api example, inside form:</b>
