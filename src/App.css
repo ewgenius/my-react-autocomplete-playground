@@ -1,9 +1,0 @@
-.App {
-  display: flex;
-  gap: 16px;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 16px;
-}

@@ -1,0 +1,27 @@
+.App {
+  display: flex;
+  gap: 32px;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.Row {
+  display: flex;
+  flex-flow: column;
+  gap: 16px;
+  min-width: 320px;
+}
+
+.Button {
+  border: 1px solid #aaa;
+  background-color: #fff;
+  padding: 8px;
+  border-radius: 4px;
+  width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+}

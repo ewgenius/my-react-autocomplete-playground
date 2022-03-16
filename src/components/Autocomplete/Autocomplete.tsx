@@ -22,11 +22,11 @@ export interface Item {
 }
 
 export interface AutocompleteProps {
+  name?: string;
   dataFetcher: (query: string) => Promise<Item[]>;
-  itemRender?: (item: Item) => ReactNode;
 }
 
-export const Autocomplete: FC<AutocompleteProps> = ({ dataFetcher }) => {
+export const Autocomplete: FC<AutocompleteProps> = ({ name, dataFetcher }) => {
   const [open, setOpen] = useState(false);
   const [highlightQuery, setHighlightQuery] = useState<string>();
   const [highlightRegexp, setHighlightRegexp] = useState<RegExp>();
@@ -116,6 +116,7 @@ export const Autocomplete: FC<AutocompleteProps> = ({ dataFetcher }) => {
         open && classes.AutocompleteOpened
       )}
     >
+      <input name={name} type="hidden" value={selected || ""} />
       <AutocompleteInput
         selected={selected}
         editable={open}
@@ -178,6 +179,12 @@ const AutocompleteInput: FC<AutocompleteInputProps> = ({
     target: { value },
   }) => setQuery(value);
 
+  useEffect(() => {
+    if (selected) {
+      setQuery(undefined);
+    }
+  }, [selected]);
+
   useDebouncedEffect(
     // mark as quering right after typing started
     () => {
@@ -223,7 +230,10 @@ const AutocompleteItem: FC<AutocompleteItemProps> = memo(
       onSelect(item.value);
     }, [item.value, onSelect]);
     return (
-      <div className={classes.Item} onClick={onClick}>
+      <div
+        className={classnames(classes.Item, selected && classes.Selected)}
+        onClick={onClick}
+      >
         {parts.map((part, i) => (
           <span
             key={i}
